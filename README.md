@@ -3,6 +3,13 @@
 [![Lint Status](https://github.com/tothenew/terraform-aws-eks/workflows/Lint/badge.svg)](https://github.com/tothenew/terraform-aws-eks/actions)
 [![LICENSE](https://img.shields.io/github/license/tothenew/terraform-aws-eks)](https://github.com/tothenew/terraform-aws-eks/blob/master/LICENSE)
 
+The following content needed to be created and managed:
+
+Introduction
+Explaination of module
+Intended users
+Resource created and managed by this module
+Example Usages
 
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
