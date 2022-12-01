@@ -5,7 +5,7 @@ locals {
     min_size                 = 3
     max_size                 = 4
     desired_size             = 3
-    name                     = "ttn-eks-self-managed-ayush"
+    name                     = "ttn-eks-self-managed-ayush-2"
     version                  = "1.24"
     is_mixed_instance_policy = true
     instance_type            = "t3a.medium"
