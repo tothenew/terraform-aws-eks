@@ -1,0 +1,31 @@
+imagePullSecrets: []
+
+image:
+  registry: ${image_registry}
+  repository: ${image_repository}
+  ## defaults to app.Version
+  tag: ${image_tag}
+  pullPolicy: IfNotPresent
+
+nodeSelector: ${node_selector}
+tolerations: ${tolerations}
+
+resources: ${resources}
+
+podLabels: ${pod_labels}
+podAnnotations: ${pod_annotations}
+
+updateStrategy:
+  type: RollingUpdate
+
+secrets-store-csi-driver:
+  install: false
+
+## Install default service account
+rbac:
+  install: true
+  pspEnabled: false
+  serviceAccount:
+    name: ${service_account_name}
+
+priorityClassName: "${priority_class_name}"
