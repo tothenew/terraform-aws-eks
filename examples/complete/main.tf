@@ -16,7 +16,7 @@ provider "kubernetes" {
 
 locals {
   name   = "ex-${replace(basename(path.cwd), "_", "-")}"
-  region = "us-west-2"     #"eu-west-1"
+  region = "eu-west-1"
 
   tags = {
     Example    = local.name
