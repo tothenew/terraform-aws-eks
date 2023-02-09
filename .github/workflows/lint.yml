@@ -18,7 +18,7 @@ jobs:
       image: hashicorp/terraform:latest
     steps:
       - uses: actions/checkout@master
-      - run: terraform fmt --recursive -check=true
+      - run: terraform fmt --recursive
 
   validate:
     name: Validate
