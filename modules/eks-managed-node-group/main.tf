@@ -448,6 +448,7 @@ resource "aws_iam_role_policy_attachment" "this" {
   for_each = var.create && var.create_iam_role ? toset(compact(distinct(concat([
     "${local.iam_role_policy_prefix}/AmazonEKSWorkerNodePolicy",
     "${local.iam_role_policy_prefix}/AmazonEC2ContainerRegistryReadOnly",
+    "${local.iam_role_policy_prefix}/AmazonSSMManagedInstanceCore",
     var.iam_role_attach_cni_policy ? local.cni_policy : "",
   ], var.iam_role_additional_policies)))) : toset([])
 
