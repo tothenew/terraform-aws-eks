@@ -20,6 +20,6 @@ resource "aws_autoscaling_schedule" "eks_start" {
   min_size               = try(var.self_managed_node_group_defaults.min_size, 0)
   max_size               = try(var.self_managed_node_group_defaults.max_size, 3)
   desired_capacity       = try(var.self_managed_node_group_defaults.desired_size, 1)
-  autoscaling_group_name = each.value
+  autoscaling_group_name = toset(compact([for name in module.self_managed_node_group : group.autoscaling_group_name]))[count.index]
   recurrence             = var.schedule_cron_start
 }
