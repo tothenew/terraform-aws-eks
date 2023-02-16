@@ -1,6 +1,3 @@
-locals {   
-    today_date = formatdate("YYYY-MM-DD",timestamp())
-}
 resource "aws_autoscaling_schedule" "eks_stop" {
   depends_on = [
     module.self_managed_node_group
@@ -10,7 +7,6 @@ resource "aws_autoscaling_schedule" "eks_stop" {
   min_size               = 0
   max_size               = 0
   desired_capacity       = 0
-  start_time             = var.schedule_start_time
   autoscaling_group_name = each.value.autoscaling_group_name
   recurrence             = var.schedule_cron_stop
 }
@@ -26,5 +22,4 @@ resource "aws_autoscaling_schedule" "eks_start" {
   desired_capacity       = try(each.value.autoscaling_group_desired_capacity,var.self_managed_node_group_defaults.desired_size, 1)
   autoscaling_group_name = each.value.autoscaling_group_name
   recurrence             = var.schedule_cron_start
-  start_time             = var.schedule_start_time
 }

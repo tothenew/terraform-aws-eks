@@ -522,12 +522,6 @@ variable "schedule_cron_stop" {
   default     = ""
   description = "Cron expression to define when to trigger a stop of the auto-scaling group. E.g. '0 10 * * *' to stop at 10am GMT time."
 }
- variable "schedule_start_time" {
-  type        = string
-  default     = "2016-12-11T18:00:00Z"
-  description = "The date and time for the recurring schedule to start, in UTC with the format. E.g. '2023-03-20T18:00:00Z' "
-
- }
 ################################################################################
 # EKS Managed Node Group
 ################################################################################
