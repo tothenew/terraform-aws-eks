@@ -1,6 +1,5 @@
 resource "aws_autoscaling_schedule" "ecs_stop" {
   for_each = var.enable_schedule ? toset(module.eks_cluster.self_managed_node_groups_autoscaling_group_names) : []
-  count                  = !var.fargate_only && var.enable_schedule ? 1 : 0
   scheduled_action_name  = "self-managed-nodegroup-${var.cluster_name}-stop"
   min_size               = 0
   max_size               = 0
