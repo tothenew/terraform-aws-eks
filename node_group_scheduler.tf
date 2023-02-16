@@ -17,9 +17,9 @@ resource "aws_autoscaling_schedule" "eks_start" {
   ]
   for_each = { for k, v in module.self_managed_node_group : k=>v if var.enable_schedule }
   scheduled_action_name  = "self-managed-nodegroup-${var.cluster_name}-start"
-  min_size               = try(var.self_managed_node_group_defaults.min_size, 0)
-  max_size               = try(var.self_managed_node_group_defaults.max_size, 3)
-  desired_capacity       = try(var.self_managed_node_group_defaults.desired_size, 1)
+  min_size               = try(each.value.min_size,var.self_managed_node_group_defaults.min_size, 0)
+  max_size               = try(each.value.max_size,var.self_managed_node_group_defaults.max_size, 3)
+  desired_capacity       = try(each.value.desired_size,var.self_managed_node_group_defaults.desired_size, 1)
   autoscaling_group_name = each.value.autoscaling_group_name
   recurrence             = var.schedule_cron_start
 }
