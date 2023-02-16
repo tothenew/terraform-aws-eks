@@ -507,7 +507,7 @@ variable "self_managed_node_group_defaults" {
 }
 
 variable "enable_schedule" {
-  description = "Enables schedule to shut down and start up instances outside business hours."
+  description = "Enables schedule to shut down and start up instances outside business hours for self-managed node group"
   type        = bool
   default     = false
 }
