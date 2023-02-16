@@ -1,5 +1,5 @@
 resource "aws_autoscaling_schedule" "ecs_stop" {
-  for_each = var.enable_schedule ? toset(module.eks_cluster.self_managed_node_groups_autoscaling_group_names) : []
+  for_each = var.enable_schedule ? toset(compact([for group in module.self_managed_node_group : group.autoscaling_group_name])) : []
   scheduled_action_name  = "self-managed-nodegroup-${var.cluster_name}-stop"
   min_size               = 0
   max_size               = 0
@@ -9,7 +9,7 @@ resource "aws_autoscaling_schedule" "ecs_stop" {
 }
 
 resource "aws_autoscaling_schedule" "ecs_start" {
-  for_each = var.enable_schedule ? toset(module.eks_cluster.self_managed_node_groups_autoscaling_group_names) : []
+  for_each = var.enable_schedule ? toset(compact([for group in module.self_managed_node_group : group.autoscaling_group_name])) : []
   scheduled_action_name  = "self-managed-nodegroup-${var.cluster_name}-start"
   min_size               = try(each.value.min_size, var.self_managed_node_group_defaults.min_size, 0)
   max_size               = try(each.value.max_size, var.self_managed_node_group_defaults.max_size, 3)
