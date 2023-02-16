@@ -9,7 +9,7 @@ resource "aws_autoscaling_schedule" "ecs_stop" {
 }
 
 resource "aws_autoscaling_schedule" "ecs_start" {
-   dependsdepends_on = [
+   depends_on = [
      module.self_managed_node_group
    ]  
   for_each = var.enable_schedule ? toset(compact([for group in module.self_managed_node_group : group.autoscaling_group_name])) : []
