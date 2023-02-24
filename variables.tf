@@ -506,6 +506,22 @@ variable "self_managed_node_group_defaults" {
   default     = {}
 }
 
+variable "enable_schedule" {
+  description = "Enables schedule to shut down and start up instances outside business hours for self-managed node group"
+  type        = bool
+  default     = false
+}
+
+variable "schedule_cron_start" {
+  type        = string
+  default     = ""
+  description = "Cron expression to define when to trigger a start of the auto-scaling group. E.g. '0 20 * * *' to start at 8pm GMT time."
+}
+variable "schedule_cron_stop" {
+  type        = string
+  default     = ""
+  description = "Cron expression to define when to trigger a stop of the auto-scaling group. E.g. '0 10 * * *' to stop at 10am GMT time."
+}
 ################################################################################
 # EKS Managed Node Group
 ################################################################################
