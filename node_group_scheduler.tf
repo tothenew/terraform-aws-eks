@@ -1,6 +1,7 @@
 resource "aws_autoscaling_schedule" "eks_stop" {
   depends_on = [
-    module.self_managed_node_group
+    module.self_managed_node_group,
+    module.eks_managed_node_group
   ]
   for_each = { for k, v in module.self_managed_node_group : k=>v if var.enable_schedule }
   scheduled_action_name  = "self-managed-nodegroup-${var.cluster_name}-stop"
@@ -13,7 +14,8 @@ resource "aws_autoscaling_schedule" "eks_stop" {
 
 resource "aws_autoscaling_schedule" "eks_start" { 
   depends_on = [
-    module.self_managed_node_group
+    module.self_managed_node_group,
+    module.eks_managed_node_group
   ]
   for_each = { for k, v in module.self_managed_node_group : k=>v if var.enable_schedule }
   scheduled_action_name  = "self-managed-nodegroup-${var.cluster_name}-start"

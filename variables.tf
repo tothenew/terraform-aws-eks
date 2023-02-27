@@ -595,3 +595,19 @@ variable "aws_auth_accounts" {
   type        = list(any)
   default     = []
 }
+
+################################################################################
+# Additonal Helm Modules
+################################################################################
+
+variable "create_node_termination_handler" {
+  description = "Create Node Termination handler for EKS cluster?"
+  type        = bool
+  default     = false
+}
+
+variable "create_cluster_autoscaler" {
+  description = "Create Cluster Autoscaler for EKS cluster?"
+  type        = bool
+  default     = false
+}

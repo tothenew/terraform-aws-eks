@@ -2,17 +2,22 @@ data "aws_caller_identity" "current" {}
 
 locals {
   eks_cluster = {
+    is_enable = true
     min_size                 = 3
     max_size                 = 4
     desired_size             = 3
-    name                     = "ttn-eks-self-managed-ayush-2"
+    name                     = "eks-merging-test"
+    environment_name         = "dev"
     version                  = "1.24"
     is_mixed_instance_policy = true
+    vpc_id                   = "vpc-0cdbbbd4cedcea769"
+    vpc_cidr                 = ["172.31.0.0/16"]
+    subnet_ids               = ["subnet-0257e8262a7017948", "subnet-062a9cb5ea10455da", "subnet-06b6a7e3c22de35ca"]
     instance_type            = "t3a.medium"
     instances_distribution = {
-      on_demand_base_capacity  = 0
-      on_demand_percentage_above_base_capacity     = 20
-      spot_allocation_strategy = "capacity-optimized"
+      on_demand_base_capacity                  = 0
+      on_demand_percentage_above_base_capacity = 20
+      spot_allocation_strategy                 = "capacity-optimized"
     }
     override = [
       {
@@ -37,82 +42,77 @@ locals {
         }
       }
     }
+    cluster_security_group = {
+      cluster_rule_ingress = {
+        description = "cluster SG"
+        protocol    = "tcp"
+        from_port   = 0
+        to_port     = 65535
+        type        = "ingress"
+        cidr_blocks = ["0.0.0.0/0"]
+      },
+      cluster_rule_egress = {
+        description = "cluster SG"
+        protocol    = "tcp"
+        from_port   = 0
+        to_port     = 65535
+        type        = "egress"
+        cidr_blocks = ["0.0.0.0/0"]
+      }
+    }
+    node_security_group = {
+      node_rules_ingress = {
+        description = "node SG"
+        protocol    = "TCP"
+        from_port   = 0
+        to_port     = 65535
+        type        = "ingress"
+        cidr_blocks = ["0.0.0.0/0"]
+      }
+      node_rules_egress = {
+        description = "node SG"
+        protocol    = "tcp"
+        from_port   = 0
+        to_port     = 65535
+        type        = "egress"
+        cidr_blocks = ["0.0.0.0/0"]
+      }
+    }
     #aws eks describe-addon-version
     addons = {
       vpc-cni = {
         resolve_conflicts = "OVERWRITE"
+      },
+      # aws-ebs-csi-driver = {
+      #   resolve_conflicts = "OVERWRITE"
+      # },
+      kube-proxy = {
+        resolve_conflicts = "OVERWRITE"
+      }
+    }
+    lb = {
+      image = {
+        repository = "public.ecr.aws/eks/aws-load-balancer-controller"
+        tag        = "v2.4.6"
       }
     }
   }
 }
 
-provider "kubernetes" {
-  host                   = module.eks_cluster.cluster_endpoint
-  cluster_ca_certificate = base64decode(module.eks_cluster.cluster_certificate_authority_data)
-
-  exec {
-    api_version = "client.authentication.k8s.io/v1beta1"
-    command     = "aws"
-    args = ["eks", "get-token", "--cluster-name", local.eks_cluster.name]
-  }
-}
-
-provider "helm" {
-  kubernetes {
-    host                   = module.eks_cluster.cluster_endpoint
-    cluster_ca_certificate = base64decode(module.eks_cluster.cluster_certificate_authority_data)
-    exec {
-      api_version = "client.authentication.k8s.io/v1beta1"
-      command     = "aws"
-      args = ["eks", "get-token", "--cluster-name", local.eks_cluster.name]
-    }
-  }
-}
 
 module "eks_cluster" {
-  #source = "git::https://github.com/tothenew/terraform-aws-eks.git"
-  source = "../"
+  source          = "../"
   cluster_name    = local.eks_cluster.name
   cluster_version = try(local.eks_cluster.version, "1.24")
-
-  # cluster_security_group_additional_rules = {
-  #   egress_nodes_ephemeral_ports_tcp = {
-  #     description                = "To node 1025-65535"
-  #     protocol                   = "tcp"
-  #     from_port                  = 0
-  #     to_port                    = 65535
-  #     type                       = "ingress"
-  #     source_node_security_group = true
-  #     cidr_blocks = ["172.31.0.0/16","61.12.91.218/32"]
-  #   }
-  # }
-
-  # node_security_group_additional_rules = {
-  #   ingress_self_all = {
-  #     description = "Node to node all ports/protocols"
-  #     protocol    = "-1"
-  #     from_port   = 0
-  #     to_port     = 0
-  #     type        = "ingress"
-  #     cidr_blocks = ["172.31.0.0/16","61.12.91.218/32"]
-  #    # self        = true
-  #   }
-  #   egress_all = {
-  #     description      = "Node all egress"
-  #     protocol         = "-1"
-  #     from_port        = 0
-  #     to_port          = 0
-  #     type             = "egress"
-  #     cidr_blocks      = ["0.0.0.0/0"]
-  #     ipv6_cidr_blocks = ["::/0"]
-  #   }
-  # }
-
+  # count = local.eks_cluster.is_enable == true ? 1 : 0
+  create_cluster_autoscaler = true
+  create_node_termination_handler = true
+  
   cluster_endpoint_private_access = try(local.eks_cluster.cluster_endpoint_private_access, false)
   cluster_endpoint_public_access  = try(local.eks_cluster.cluster_endpoint_public_access, true)
 
-  vpc_id     = "vpc-082272666d7f0d9ef"
-  subnet_ids = ["subnet-069a7eaf5038896cf", "subnet-0ef3c7887a6f02a22", "subnet-00b925738581e59a0"]
+  vpc_id     = local.eks_cluster.vpc_id
+  subnet_ids = local.eks_cluster.subnet_ids
 
   # Self managed node groups will not automatically create the aws-auth configmap so we need to
   create_aws_auth_configmap = true
@@ -129,42 +129,26 @@ module "eks_cluster" {
       "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
     ]
   }
-
+  cluster_security_group_additional_rules = local.eks_cluster.cluster_security_group
   self_managed_node_groups = {
     # Default node group - as provisioned by the module defaults
     default_node_group = {
       name = local.eks_cluster.name
     }
-
     mixed = {
-      name = local.eks_cluster.name
+      name         = local.eks_cluster.name
       min_size     = try(local.eks_cluster.min_size, 2)
       max_size     = try(local.eks_cluster.max_size, 4)
       desired_size = try(local.eks_cluster.min_size, 2)
-      # create_security_group          = true
-      # security_group_name            = "self-managed-node-group-complete-example"
-      # security_group_use_name_prefix = true
-      # security_group_description     = "Self managed node group complete example security group"
-      # security_group_rules = {
-      #   phoneOut = {
-      #     description = "Hello CloudFlare"
-      #     protocol    = "TCP"
-      #     from_port   = 0
-      #     to_port     = 65535
-      #     type        = "ingress"
-      #     cidr_blocks = ["172.31.0.0/16","61.12.91.218/32"]
-      #     source_cluster_security_group = true
-      #   }
-      #   phoneHome = {
-      #     description                   = "Hello cluster"
-      #     protocol                      = "tcp"
-      #     from_port                     = 0
-      #     to_port                       = 65535
-      #     type                          = "egress"
-      #     cidr_blocks = ["0.0.0.0/0"]
-      #     source_cluster_security_group = true # bit of reflection lookup
-      #   }
-      # }
+      tags = {
+        "k8s.io/cluster-autoscaler/enabled"                   = "true"
+        "k8s.io/cluster-autoscaler/${local.eks_cluster.name}" = "owned"
+      }
+      create_security_group          = true
+      security_group_name            = local.eks_cluster.name
+      security_group_use_name_prefix = true
+      security_group_description     = "Self managed NodeGroup SG"
+      security_group_rules           = local.eks_cluster.node_security_group
 
       pre_bootstrap_user_data = <<-EOT
         TOKEN=`curl -s  -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600"`
@@ -175,6 +159,7 @@ module "eks_cluster" {
 
       bootstrap_extra_args = "--kubelet-extra-args '--node-labels=node.kubernetes.io/lifecycle='\"$EC2_LIFE_CYCLE\"' --register-with-taints=instance_type='\"$INSTANCE_TYPE\"':NoSchedule,ec2_lifecycle='\"$EC2_LIFE_CYCLE\"':NoSchedule,availability_zone='\"$AVAILABILITY_ZONE\"':NoSchedule'"
 
+
       post_bootstrap_user_data = <<-EOT
         cd /tmp
         sudo yum install -y https://s3.amazonaws.com/ec2-downloads-windows/SSMAgent/latest/linux_amd64/amazon-ssm-agent.rpm
@@ -182,27 +167,12 @@ module "eks_cluster" {
         sudo systemctl start amazon-ssm-agent
         EOT
 
-      block_device_mappings = "${local.eks_cluster.block_device_mappings}"
+      block_device_mappings      = "${local.eks_cluster.block_device_mappings}"
       use_mixed_instances_policy = "${local.eks_cluster.is_mixed_instance_policy}"
       mixed_instances_policy = {
         instances_distribution = "${local.eks_cluster.instances_distribution}"
-        override = "${local.eks_cluster.override}"
+        override               = "${local.eks_cluster.override}"
       }
     }
   }
-}
-
-module "cluster_autoscaler" {
-  #source = "git::https://github.com/DNXLabs/terraform-aws-eks-cluster-autoscaler.git"
-  source = "../modules/terraform-aws-eks-cluster-autoscaler"
-  enabled = true
-  cluster_name                     = module.eks_cluster.cluster_id
-  cluster_identity_oidc_issuer     = module.eks_cluster.cluster_oidc_issuer_url
-  cluster_identity_oidc_issuer_arn = module.eks_cluster.oidc_provider_arn
-  aws_region                       = "us-west-2"
-}
-
-module "node_termination_handler" {
-  #source = "git::https://github.com/DNXLabs/terraform-aws-eks-node-termination-handler.git"
-  source = "../modules/terraform-aws-eks-node-termination-handler"
 }

@@ -1,6 +1,7 @@
 data "aws_partition" "current" {}
 data "aws_caller_identity" "current" {}
 data "aws_default_tags" "current" {}
+data "aws_region" "current" {}
 
 locals {
   create = var.create && var.putin_khuylo
@@ -487,5 +488,35 @@ resource "kubernetes_config_map_v1_data" "aws_auth" {
   depends_on = [
     # Required for instances where the configmap does not exist yet to avoid race condition
     kubernetes_config_map.aws_auth,
+  ]
+}
+
+################################################################################
+# node termination handler
+################################################################################
+
+module "node_termination_handler" {
+  count = var.create_node_termination_handler ? 1 : 0
+  source = "./modules/terraform-aws-eks-node-termination-handler"
+  depends_on = [
+    module.eks_managed_node_group,
+    module.self_managed_node_group,
+  ]
+}
+
+################################################################################
+# cluster autoscaler
+################################################################################
+
+module "cluster_autoscaler" {
+  source = "./modules/terraform-aws-eks-cluster-autoscaler"
+  enabled = var.create_cluster_autoscaler
+  cluster_name                     = aws_eks_cluster.this[0].id
+  cluster_identity_oidc_issuer     = aws_eks_cluster.this[0].identity[0].oidc[0].issuer
+  cluster_identity_oidc_issuer_arn = aws_iam_openid_connect_provider.oidc_provider[0].arn
+  aws_region                       = data.aws_region.current.name
+  depends_on = [
+    module.eks_managed_node_group,
+    module.self_managed_node_group,
   ]
 }
