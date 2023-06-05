@@ -347,7 +347,7 @@ resource "aws_eks_addon" "this" {
   addon_name   = try(each.value.name, each.key)
 
   addon_version            = lookup(each.value, "addon_version", null)
-  resolve_conflicts        = lookup(each.value, "resolve_conflicts", null)
+  resolve_conflicts_on_update        = lookup(each.value, "resolve_conflicts", null)
   service_account_role_arn = lookup(each.value, "service_account_role_arn", null)
 
   depends_on = [
