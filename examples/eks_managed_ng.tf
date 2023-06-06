@@ -75,49 +75,11 @@ module "eks_cluster" {
   cluster_name    = local.eks_cluster.name
   cluster_version = try(local.eks_cluster.version, "1.24")
 
-  # cluster_security_group_additional_rules = {
-  #   egress_nodes_ephemeral_ports_tcp = {
-  #     description                = "To node 1025-65535"
-  #     protocol                   = "tcp"
-  #     from_port                  = 0
-  #     to_port                    = 65535
-  #     type                       = "ingress"
-  #     source_node_security_group = true
-  #     cidr_blocks = ["172.31.0.0/16","61.12.91.218/32"]
-  #   }
-  # }
-
-  # node_security_group_additional_rules = {
-  #   ingress_self_all = {
-  #     description = "Node to node all ports/protocols"
-  #     protocol    = "-1"
-  #     from_port   = 0
-  #     to_port     = 0
-  #     type        = "ingress"
-  #     cidr_blocks = ["172.31.0.0/16","61.12.91.218/32"]
-  #    # self        = true
-  #   }
-  #   egress_all = {
-  #     description      = "Node all egress"
-  #     protocol         = "-1"
-  #     from_port        = 0
-  #     to_port          = 0
-  #     type             = "egress"
-  #     cidr_blocks      = ["0.0.0.0/0"]
-  #     ipv6_cidr_blocks = ["::/0"]
-  #   }
-  # }
-
   cluster_endpoint_private_access = try(local.eks_cluster.cluster_endpoint_private_access, false)
   cluster_endpoint_public_access  = try(local.eks_cluster.cluster_endpoint_public_access, true)
 
   vpc_id     = "vpc-025341d8069053126"
   subnet_ids = ["subnet-00babdad680a62b56", "subnet-030bbb294008087e4"]
-
-  # Self managed node groups will not automatically create the aws-auth configmap so we need to
-  # create_aws_auth_configmap = true
-  # manage_aws_auth_configmap = true
-  # create                    = true
 
   #Cluster Level Addons
   cluster_addons = local.eks_cluster.addons
@@ -136,36 +98,11 @@ module "eks_cluster" {
 
   }
 
-
     mixed = {
       name = local.eks_cluster.name
       min_size     = try(local.eks_cluster.min_size, 2)
       max_size     = try(local.eks_cluster.max_size, 4)
       desired_size = try(local.eks_cluster.min_size, 2)
-      # create_security_group          = true
-      # security_group_name            = "self-managed-node-group-complete-example"
-      # security_group_use_name_prefix = true
-      # security_group_description     = "Self managed node group complete example security group"
-      # security_group_rules = {
-      #   phoneOut = {
-      #     description = "Hello CloudFlare"
-      #     protocol    = "TCP"
-      #     from_port   = 0
-      #     to_port     = 65535
-      #     type        = "ingress"
-      #     cidr_blocks = ["172.31.0.0/16","61.12.91.218/32"]
-      #     source_cluster_security_group = true
-      #   }
-      #   phoneHome = {
-      #     description                   = "Hello cluster"
-      #     protocol                      = "tcp"
-      #     from_port                     = 0
-      #     to_port                       = 65535
-      #     type                          = "egress"
-      #     cidr_blocks = ["0.0.0.0/0"]
-      #     source_cluster_security_group = true # bit of reflection lookup
-      #   }
-      # }
 
       pre_bootstrap_user_data = <<-EOT
         TOKEN=`curl -s  -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600"`
