@@ -5,10 +5,10 @@ locals {
     min_size                 = 3
     max_size                 = 4
     desired_size             = 3
-    name                     = "ttn-eks-managed"
+    name                     = var.cluster_name
     version                  = "1.24"
     is_mixed_instance_policy = true
-    instance_type            = "t3a.medium"
+    instance_type            = var.cluster_instance_type
     instances_distribution = {
       on_demand_base_capacity  = 0
       on_demand_percentage_above_base_capacity     = 20
@@ -28,7 +28,7 @@ locals {
       xvda = {
         device_name = "/dev/xvda"
         ebs = {
-          volume_size           = 50
+          volume_size           = var.ebs_volume_size
           volume_type           = "gp3"
           iops                  = 3000
           throughput            = 150
@@ -71,15 +71,15 @@ provider "helm" {
 
 module "eks_cluster" {
   #source = "git::https://github.com/tothenew/terraform-aws-eks.git"
-  source = "../"
+  source = "../.."
   cluster_name    = local.eks_cluster.name
   cluster_version = try(local.eks_cluster.version, "1.24")
 
   cluster_endpoint_private_access = try(local.eks_cluster.cluster_endpoint_private_access, false)
   cluster_endpoint_public_access  = try(local.eks_cluster.cluster_endpoint_public_access, true)
 
-  vpc_id     = "vpc-025341d8069053126"
-  subnet_ids = ["subnet-00babdad680a62b56", "subnet-030bbb294008087e4"]
+  vpc_id     = var.vpc_id
+  subnet_ids = var.subnet_ids
 
   #Cluster Level Addons
   cluster_addons = local.eks_cluster.addons
@@ -132,15 +132,15 @@ module "eks_cluster" {
 
 module "cluster_autoscaler" {
   #source = "git::https://github.com/DNXLabs/terraform-aws-eks-cluster-autoscaler.git"
-  source = "../modules/terraform-aws-eks-cluster-autoscaler"
+  source = "../../modules/terraform-aws-eks-cluster-autoscaler"
   enabled = true
   cluster_name                     = module.eks_cluster.cluster_id
   cluster_identity_oidc_issuer     = module.eks_cluster.cluster_oidc_issuer_url
   cluster_identity_oidc_issuer_arn = module.eks_cluster.oidc_provider_arn
-  aws_region                       = "us-east-2"
+  aws_region                       = var.aws_region
 }
 
 module "node_termination_handler" {
   #source = "git::https://github.com/DNXLabs/terraform-aws-eks-node-termination-handler.git"
-  source = "../modules/terraform-aws-eks-node-termination-handler"
+  source = "../../modules/terraform-aws-eks-node-termination-handler"
 }
