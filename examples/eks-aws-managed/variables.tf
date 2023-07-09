@@ -25,7 +25,7 @@ variable "vpc_id" {
 variable "subnet_ids" {
   description = "A list of subnet IDs where the nodes/node groups will be provisioned."
   type        = list(string)
-  default     = ["subnet-08738b09b2b645723", "subnet-068b2ef2bf59bad62", "subnet-05b5c288fbbb4cfab"]
+  default     = ["subnet-0377a9b6b8da787d5", "subnet-068b2ef2bf59bad62", "subnet-05b5c288fbbb4cfab"]
 }
 
 variable "aws_region" {

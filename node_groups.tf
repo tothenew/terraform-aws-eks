@@ -107,6 +107,14 @@ locals {
       type        = "ingress"
       self        = true
     }
+    ingress_nodes_all = {
+      description                = "control plane to data plane"
+      protocol                   = "-1"
+      from_port                  = 0
+      to_port                    = 65535
+      type                       = "ingress"
+      source_cluster_security_group = true
+    }
     egress_self_coredns_udp = {
       description = "Node to node CoreDNS"
       protocol    = "udp"

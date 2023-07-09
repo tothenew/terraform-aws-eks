@@ -490,17 +490,3 @@ resource "kubernetes_config_map_v1_data" "aws_auth" {
   ]
 }
 
-# SG rule added to allow communication from Control Plane to Data Plane
-
-resource "aws_security_group_rule" "cluster_to_node" {
-  security_group_id = aws_security_group.node[0].id
-  protocol          = "-1"
-  from_port         = 0
-  to_port           = 65535
-  type              = "ingress"
-  description       = "control plane to data plane"
-  source_security_group_id = aws_eks_cluster.this[0].vpc_config[0].cluster_security_group_id
-  depends_on = [
-    aws_eks_cluster.this[0]
-  ]
-}
