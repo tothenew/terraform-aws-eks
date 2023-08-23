@@ -50,7 +50,7 @@ variable "fullname_override" {
 
 variable "helm_chart_version" {
   type        = string
-  default     = "9.9.2"
+  default     = "9.29.1"
   description = "Cluster Autoscaler Helm chart version."
 }
 
