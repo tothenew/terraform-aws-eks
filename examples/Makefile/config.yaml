@@ -1,0 +1,13 @@
+common:
+  vpn_cidr: "10.0.0.0/16"
+
+workspaces:
+  nonprod-us-west-1-default:
+    aws:
+      account_id: 906495541320
+      region: us-west-1
+    account_name: nonprod
+    project_name: test
+    cluster_name: test-eks
+    cluster_version: 1.27
+      
